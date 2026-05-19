@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript -e 'tryCatch\\(parse\\('\\\\''__TRACKED_VAR__'\\\\''\\), error = function\\(e\\) { cat\\('\\\\''PARSE FAIL:'\\\\'', '\\\\''__TRACKED_VAR__'\\\\'', conditionMessage\\(e\\), '\\\\''\\\\n'\\\\''\\); quit\\(status=1\\) }\\)')",
+      "Bash(break)",
+      "Bash(Rscript *)"
+    ]
+  }
+}

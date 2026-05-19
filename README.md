@@ -1,32 +1,22 @@
----
-output: github_document
----
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-```
 
 # iearthdata
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-An R client for the [iEarth DataHub](https://data-starcloud.pcl.ac.cn/iearthdata).
-It performs bounding-box and time-period queries against hosted Earth-observation
-datasets and returns pre-signed download URLs for the intersecting assets. The
-primary target is the SDC30 Embedded Seamless Data (ESD) global land-monitoring
-collection.
+An R client for the [iEarth
+DataHub](https://data-starcloud.pcl.ac.cn/iearthdata). It performs
+bounding-box and time-period queries against hosted Earth-observation
+datasets and returns pre-signed download URLs for the intersecting
+assets. The primary target is the SDC30 Embedded Seamless Data (ESD)
+global land-monitoring collection.
 
 ## Installation
 
-```r
+``` r
 # install.packages("pak")
 pak::pak("belian-earth/iearthdata")
 ```
@@ -36,19 +26,20 @@ pak::pak("belian-earth/iearthdata")
 ESD access is gated by credentials issued by the dataset author; see
 <https://github.com/shuangchencc/ESD>. Set them once per session:
 
-```r
+``` r
 Sys.setenv(
   IEARTHDATA_USER     = "your-account",
   IEARTHDATA_PASSWORD = "your-password"
 )
 ```
 
-The JWT returned at login is cached on disk under `tools::R_user_dir("iearthdata", "cache")`
-and reused across sessions until it expires.
+The JWT returned at login is cached on disk under
+`tools::R_user_dir("iearthdata", "cache")` and reused across sessions
+until it expires.
 
 ## Example: ESD tiles over Beijing for 2020
 
-```{r example, eval = FALSE}
+``` r
 library(iearthdata)
 
 ie_login()
@@ -68,27 +59,28 @@ signed <- esd_query(bbox, years = 2020, signed = TRUE)
 signed$url[1]
 ```
 
-Each row carries the tile bbox in a `wk_wkt` geometry column, so the result
-can be passed straight to `sf::st_as_sf()` for plotting or further spatial
-filtering.
+Each row carries the tile bbox in a `wk_wkt` geometry column, so the
+result can be passed straight to `sf::st_as_sf()` for plotting or
+further spatial filtering.
 
 ## Reading tiles with GDAL
 
-The signed URLs are method-specific (signed for `GET`), so GDAL's default
-`HEAD` probe against `/vsicurl/` returns a 403. Pass `vsicurl = TRUE` to
-have the `url` column returned in GDAL's `/vsicurl?use_head=no&url=...`
-form (GDAL >= 3.6), which suppresses the probe per-URL:
+The signed URLs are method-specific (signed for `GET`), so GDAL’s
+default `HEAD` probe against `/vsicurl/` returns a 403. Pass
+`vsicurl = TRUE` to have the `url` column returned in GDAL’s
+`/vsicurl?use_head=no&url=...` form (GDAL \>= 3.6), which suppresses the
+probe per-URL:
 
-```r
+``` r
 tiles <- esd_query(bbox, years = 2020, signed = TRUE, vsicurl = TRUE)
 r <- terra::rast(tiles$url[1])
 ```
 
 Equivalently, `as_vsicurl()` wraps any existing signed URL:
 
-```r
+``` r
 terra::rast(as_vsicurl(signed_url))
 ```
 
-ESD tiles are tiled GeoTIFFs (256x256, DEFLATE, 13 bands `UInt16`) but are
-not strict COGs: there are no overviews.
+ESD tiles are tiled GeoTIFFs (256x256, DEFLATE, 13 bands `UInt16`) but
+are not strict COGs: there are no overviews.

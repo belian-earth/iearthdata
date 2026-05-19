@@ -19,11 +19,17 @@
 #'   `dataset_id` must be supplied so the resourceId can be looked up).
 #' @param dataset_id Required when `files` is a character vector.
 #' @param max_active Maximum concurrent requests.
+#' @param vsicurl If `TRUE`, wrap each signed URL in GDAL's
+#'   `/vsicurl?use_head=no&url=...` form so it can be opened directly
+#'   with `terra::rast()` / `sf::gdal_read()` / `gdalinfo`. OBS signs
+#'   for `GET` only, so GDAL's default `HEAD` probe returns 403; this
+#'   form (GDAL >= 3.6) skips the probe. See [as_vsicurl()].
 #' @return A character vector of pre-signed URLs aligned with `files`.
 #'   Failed requests yield `NA` with a `warning` carrying the HTTP
 #'   status and (where available) the response body.
 #' @export
-get_signed_url <- function(files, dataset_id = NULL, max_active = 6L) {
+get_signed_url <- function(files, dataset_id = NULL, max_active = 6L,
+                           vsicurl = FALSE) {
   auth <- ie_require_auth()
   jobs <- build_sign_jobs(files, dataset_id)
   if (nrow(jobs) == 0L) return(character())
@@ -38,9 +44,39 @@ get_signed_url <- function(files, dataset_id = NULL, max_active = 6L) {
     on_error = "continue"
   )
 
-  vapply(seq_along(resps), function(i) {
+  urls <- vapply(seq_along(resps), function(i) {
     parse_signed_url(resps[[i]], jobs$object_key[i])
   }, character(1))
+
+  if (isTRUE(vsicurl)) as_vsicurl(urls) else urls
+}
+
+#' Wrap a signed URL in GDAL's `/vsicurl?use_head=no&url=...` form
+#'
+#' OBS pre-signed URLs are method-specific (signed for `GET`), so GDAL's
+#' default `HEAD` probe against `/vsicurl/<url>` fails with a 403. The
+#' query-string variant introduced in GDAL 3.6 lets us disable the
+#' probe per-URL without touching the global `CPL_VSIL_CURL_USE_HEAD`
+#' env var.
+#'
+#' @param url Character vector of signed URLs. `NA` and empty strings
+#'   pass through unchanged.
+#' @return A character vector of `/vsicurl?...` paths.
+#' @export
+as_vsicurl <- function(url) {
+  # `utils::URLencode(reserved = TRUE)` has a long-standing R quirk
+  # where it returns the input unchanged if it already contains any
+  # `%xx` sequence; `curl::curl_escape()` is a correct RFC 3986
+  # encoder. The OBS signature embeds `%2F` literals, so the
+  # double-encoding to `%252F` here is intentional — GDAL decodes
+  # once when parsing `url=<value>`, recovering the original signed
+  # URL byte-for-byte.
+  out <- url
+  ok <- !is.na(url) & nzchar(url)
+  if (any(ok)) {
+    out[ok] <- paste0("/vsicurl?use_head=no&url=", curl::curl_escape(url[ok]))
+  }
+  out
 }
 
 build_sign_jobs <- function(files, dataset_id) {

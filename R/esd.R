@@ -10,14 +10,18 @@
 #'   available years.
 #' @param signed If `TRUE`, attaches pre-signed download URLs as a `url`
 #'   column. Requires a prior [ie_login()].
+#' @param vsicurl Only meaningful with `signed = TRUE`. If `TRUE`, the
+#'   `url` column is returned in GDAL's `/vsicurl?use_head=no&url=...`
+#'   form so it can be opened directly by `terra` / `sf` / `gdalinfo`.
+#'   See [as_vsicurl()].
 #' @return A tibble of intersecting tiles. See [query_files()] for the
 #'   column schema; with `signed = TRUE` an additional `url` column is
 #'   appended.
 #' @export
-esd_query <- function(bbox, years = NULL, signed = FALSE) {
+esd_query <- function(bbox, years = NULL, signed = FALSE, vsicurl = FALSE) {
   out <- query_files(id = 64L, geometry = bbox, time = years)
   if (isTRUE(signed) && nrow(out) > 0L) {
-    out$url <- get_signed_url(out)
+    out$url <- get_signed_url(out, vsicurl = vsicurl)
   }
   out
 }

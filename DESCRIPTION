@@ -15,6 +15,7 @@ RoxygenNote: 8.0.0
 Depends:
     R (>= 4.1)
 Imports:
+    curl,
     httr2 (>= 1.0.0),
     openssl,
     rlang (>= 1.1.0),

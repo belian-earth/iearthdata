@@ -4,7 +4,7 @@
 \alias{get_signed_url}
 \title{Get pre-signed download URLs for files}
 \usage{
-get_signed_url(files, dataset_id = NULL, max_active = 6L)
+get_signed_url(files, dataset_id = NULL, max_active = 6L, vsicurl = FALSE)
 }
 \arguments{
 \item{files}{A tibble from \code{\link[=query_files]{query_files()}} / \code{\link[=esd_query]{esd_query()}}, or a
@@ -14,6 +14,12 @@ character vector of fully-formed object keys (in which case
 \item{dataset_id}{Required when \code{files} is a character vector.}
 
 \item{max_active}{Maximum concurrent requests.}
+
+\item{vsicurl}{If \code{TRUE}, wrap each signed URL in GDAL's
+\verb{/vsicurl?use_head=no&url=...} form so it can be opened directly
+with \code{terra::rast()} / \code{sf::gdal_read()} / \code{gdalinfo}. OBS signs
+for \code{GET} only, so GDAL's default \code{HEAD} probe returns 403; this
+form (GDAL >= 3.6) skips the probe. See \code{\link[=as_vsicurl]{as_vsicurl()}}.}
 }
 \value{
 A character vector of pre-signed URLs aligned with \code{files}.

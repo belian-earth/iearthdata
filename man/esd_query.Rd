@@ -4,7 +4,7 @@
 \alias{esd_query}
 \title{Query ESD (SDC30 Embedded Seamless Data) tiles by bounding box and year}
 \usage{
-esd_query(bbox, years = NULL, signed = FALSE)
+esd_query(bbox, years = NULL, signed = FALSE, vsicurl = FALSE)
 }
 \arguments{
 \item{bbox}{A bounding box (numeric \code{c(xmin, ymin, xmax, ymax)} in
@@ -15,6 +15,11 @@ available years.}
 
 \item{signed}{If \code{TRUE}, attaches pre-signed download URLs as a \code{url}
 column. Requires a prior \code{\link[=ie_login]{ie_login()}}.}
+
+\item{vsicurl}{Only meaningful with \code{signed = TRUE}. If \code{TRUE}, the
+\code{url} column is returned in GDAL's \verb{/vsicurl?use_head=no&url=...}
+form so it can be opened directly by \code{terra} / \code{sf} / \code{gdalinfo}.
+See \code{\link[=as_vsicurl]{as_vsicurl()}}.}
 }
 \value{
 A tibble of intersecting tiles. See \code{\link[=query_files]{query_files()}} for the

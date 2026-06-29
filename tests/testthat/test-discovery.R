@@ -46,10 +46,13 @@ httptest2::with_mock_dir("iearth", {
     expect_s3_class(res$geometry, "wk_wkt")
   })
 
-  test_that("esd_query without signing matches query_files for id=64", {
+  test_that("esd_query adds a year column parsed from the path", {
     a <- esd_query(c(116, 39, 117, 40), years = 2020L)
     b <- query_files(64L, geometry = c(116, 39, 117, 40), time = 2020L)
-    expect_equal(a, b)
+    # esd_query extends query_files with a `year` column.
+    expect_equal(a[setdiff(names(a), "year")], b)
+    expect_type(a$year, "integer")
+    expect_equal(unique(a$year), 2020L)
   })
 
 })

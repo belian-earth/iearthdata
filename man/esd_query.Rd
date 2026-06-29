@@ -23,8 +23,9 @@ See \code{\link[=as_vsicurl]{as_vsicurl()}}.}
 }
 \value{
 A tibble of intersecting tiles. See \code{\link[=query_files]{query_files()}} for the
-column schema; with \code{signed = TRUE} an additional \code{url} column is
-appended.
+column schema; an integer \code{year} column is added (parsed from the
+last segment of \code{path}) and, with \code{signed = TRUE}, a \code{url} column
+is appended.
 }
 \description{
 Convenience wrapper around \code{\link[=query_files]{query_files()}} pinned to the ESD dataset

@@ -15,11 +15,20 @@
 #'   form so it can be opened directly by `terra` / `sf` / `gdalinfo`.
 #'   See [as_vsicurl()].
 #' @return A tibble of intersecting tiles. See [query_files()] for the
-#'   column schema; with `signed = TRUE` an additional `url` column is
-#'   appended.
+#'   column schema; an integer `year` column is added (parsed from the
+#'   last segment of `path`) and, with `signed = TRUE`, a `url` column
+#'   is appended.
 #' @export
 esd_query <- function(bbox, years = NULL, signed = FALSE, vsicurl = FALSE) {
   out <- query_files(id = 64L, geometry = bbox, time = years)
+  if (nrow(out) > 0L) {
+    # ESD paths are `SDC30_EBD_V001/<year>` so the trailing segment is
+    # the integer year. `suppressWarnings` traps any non-numeric leaf
+    # added upstream and yields NA rather than aborting the query.
+    out$year <- suppressWarnings(as.integer(basename(out$path)))
+  } else {
+    out$year <- integer()
+  }
   if (isTRUE(signed) && nrow(out) > 0L) {
     out$url <- get_signed_url(out, vsicurl = vsicurl)
   }
